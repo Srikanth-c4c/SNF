@@ -1,0 +1,90 @@
+pipeline {
+
+    agent any
+
+    environment {
+        GIT_REPO = 'https://github.com/org/ios-app.git'
+        GIT_CREDENTIALS = 'git-credentials'
+        APPLE_ID = "your-apple-id"
+        APP_SPECIFIC_PASSWORD = "your-app-specific-password"
+    }
+
+    stages {
+
+        stage('Checkout Code') {
+            steps {
+                git branch: 'main', credentialsId: "${GIT_CREDENTIALS}", url: "${GIT_REPO}"
+            }
+        }
+
+        stage('Build iOS App') {
+            steps {
+                script {
+                    sh """
+                        echo "Building iOS App..."
+                        xcodebuild -workspace MyApp.xcworkspace -scheme MyApp -configuration Release -archivePath MyApp.xcarchive archive
+                        xcodebuild -exportArchive -archivePath MyApp.xcarchive -exportPath ./build -exportOptionsPlist ExportOptions.plist
+                    """
+                }
+            }
+        }
+
+        stage('Run Unit Tests') {
+            steps {
+                script {
+                    sh """
+                        echo "Running Unit Tests for iOS..."
+                        xcodebuild test -scheme MyApp -destination 'platform=iOS Simulator,name=iPhone 14,OS=latest'
+                    """
+                }
+            }
+        }
+
+        stage('Static Code Analysis - SonarQube') {
+            steps {
+                script {
+                    sh """
+                        echo "Running SonarQube Analysis..."
+                        sonar-scanner \
+                          -Dsonar.projectKey=ios_app \
+                          -Dsonar.sources=. \
+                          -Dsonar.host.url=$SONARQUBE_SERVER \
+                          -Dsonar.login=$SONARQUBE_TOKEN
+                    """
+                }
+            }
+        }
+
+        stage('Deploy to TestFlight (Testing)') {
+            steps {
+                script {
+                    sh """
+                        echo "Deploying iOS App to TestFlight..."
+                        xcrun altool --upload-app -f ./build/MyApp.ipa -t ios -u "${APPLE_ID}" -p "${APP_SPECIFIC_PASSWORD}"
+                    """
+                }
+            }
+        }
+
+        stage('Deploy to Apple App Store (Production)') {
+            steps {
+                script {
+                    sh """
+                        echo "Deploying to Apple App Store..."
+                        xcrun altool --upload-app -f ./build/MyApp.ipa -t ios -u "${APPLE_ID}" -p "${APP_SPECIFIC_PASSWORD}"
+                    """
+                }
+            }
+        }
+
+    }
+
+    post {
+        success {
+            echo "iOS App Build & Deployment Completed Successfully!"
+        }
+        failure {
+            echo "Pipeline Execution Failed!"
+        }
+    }
+}
