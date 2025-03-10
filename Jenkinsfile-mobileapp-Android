@@ -1,0 +1,91 @@
+pipeline {
+
+    agent any
+
+    environment {
+        GIT_REPO = 'https://github.com/org/android-app.git'
+        GIT_CREDENTIALS = 'git-credentials'
+        ANDROID_SDK_PATH = "/opt/android-sdk"
+        FIREBASE_CLI_PATH = "/usr/local/bin/firebase"
+        PLAY_STORE_TRACK = "production"  // Change to "internal" for testing
+    }
+
+    stages {
+
+        stage('Checkout Code') {
+            steps {
+                git branch: 'main', credentialsId: "${GIT_CREDENTIALS}", url: "${GIT_REPO}"
+            }
+        }
+
+        stage('Build Android AAB') {
+            steps {
+                script {
+                    sh """
+                        echo "Building Android AAB..."
+                        export ANDROID_HOME=${ANDROID_SDK_PATH}
+                        ./gradlew bundleRelease
+                    """
+                }
+            }
+        }
+
+        stage('Run Unit Tests') {
+            steps {
+                script {
+                    sh """
+                        echo "Running Unit Tests for Android..."
+                        ./gradlew test
+                    """
+                }
+            }
+        }
+
+        stage('Static Code Analysis - SonarQube') {
+            steps {
+                script {
+                    sh """
+                        echo "Running SonarQube Analysis..."
+                        sonar-scanner \
+                          -Dsonar.projectKey=android_app \
+                          -Dsonar.sources=. \
+                          -Dsonar.host.url=$SONARQUBE_SERVER \
+                          -Dsonar.login=$SONARQUBE_TOKEN
+                    """
+                }
+            }
+        }
+
+        stage('Deploy to Firebase (Testing)') {
+            steps {
+                script {
+                    sh """
+                        echo "Deploying to Firebase App Distribution..."
+                        ${FIREBASE_CLI_PATH} appdistribution:distribute app/build/outputs/bundle/release/app-release.aab --app <your-firebase-app-id> --groups testers
+                    """
+                }
+            }
+        }
+
+        stage('Deploy to Google Play (Production)') {
+            steps {
+                script {
+                    sh """
+                        echo "Deploying to Google Play Console..."
+                        ./gradlew publishReleaseBundle
+                    """
+                }
+            }
+        }
+
+    }
+
+    post {
+        success {
+            echo "Android App Build & Deployment Completed Successfully!"
+        }
+        failure {
+            echo "Pipeline Execution Failed!"
+        }
+    }
+}
