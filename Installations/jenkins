@@ -23,3 +23,5 @@ sudo systemctl status jenkins
 
 http://<your-server-ip>:8080 -- access
 
+sudo usermod -aG sudo jenkins
+sudo usermod -aG docker jenkins
