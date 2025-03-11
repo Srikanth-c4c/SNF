@@ -1,49 +1,23 @@
 # SonarQube Installation on On-Premises Server
 
-## Prerequisites
-Before installing SonarQube, ensure your server meets the following requirements:
-- **Operating System**: Ubuntu 20.04/22.04, CentOS 7/8, RHEL 7/8, or Debian 10/11
-- **Minimum System Requirements**:
-  - 4 CPU cores (Recommended: 8 cores)
-  - 8GB RAM (Recommended: 16GB for large-scale usage)
-  - 50GB free disk space
-- **Database**: PostgreSQL 12 or higher
-- **Java**: OpenJDK 11 or higher
-- **Internet connectivity** to download packages
-
 ## Step 1: Update System Packages
-```bash
 sudo apt update && sudo apt upgrade -y   # Ubuntu/Debian
 sudo yum update -y                      # CentOS/RHEL
 ```
 
 ## Step 2: Install Java (JDK 11+)
 SonarQube requires Java to run. Install OpenJDK 11:
-```bash
-sudo apt install openjdk-11-jdk -y  # Ubuntu/Debian
-sudo yum install java-11-openjdk -y  # CentOS/RHEL
-```
+sudo apt install openjdk-11-jdk -y  
 Verify Java installation:
-```bash
 java -version
-```
-
 ## Step 3: Install PostgreSQL Database
-### Ubuntu/Debian
-```bash
 sudo apt install postgresql postgresql-contrib -y
-```
-### CentOS/RHEL
-```bash
-sudo yum install -y postgresql-server postgresql-contrib
 sudo postgresql-setup initdb
 sudo systemctl enable postgresql
 sudo systemctl start postgresql
-```
 
 ### Configure PostgreSQL for SonarQube
 Switch to the PostgreSQL user and create a SonarQube database:
-```bash
 sudo -i -u postgres
 psql
 ```
@@ -58,7 +32,6 @@ exit
 ```
 
 ## Step 4: Download and Install SonarQube
-```bash
 cd /opt
 sudo wget https://binaries.sonarsource.com/Distribution/sonarqube/sonarqube-10.0.0.0.zip
 sudo unzip sonarqube-10.0.0.0.zip
