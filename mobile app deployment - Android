@@ -1,0 +1,42 @@
+JAVA
+sudo apt update && sudo apt upgrade -y
+sudo apt install openjdk-17-jdk -y
+java -version
+echo 'export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64' >> ~/.bashrc
+echo 'export PATH=$JAVA_HOME/bin:$PATH' >> ~/.bashrc
+source ~/.bashrc
+
+Gradle
+wget https://services.gradle.org/distributions/gradle-8.8-bin.zip -P /tmp
+sudo unzip /tmp/gradle-8.8-bin.zip -d /opt/gradle
+sudo ln -s /opt/gradle/gradle-8.8/bin/gradle /usr/bin/gradle
+gradle -v¬¬¬
+
+SDK Manager
+1)
+mkdir -p /root/android-sdk/cmdline-tools
+cd /root/android-sdk/cmdline-tools
+wget https://dl.google.com/android/repository/commandlinetools-linux-10406996_latest.zip
+unzip commandlinetools-linux-10406996_latest.zip
+mv cmdline-tools latest
+2)
+export ANDROID_HOME=/root/android-sdk
+export PATH=$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$PATH
+3)
+echo 'export ANDROID_HOME=/root/android-sdk' >> ~/.bashrc
+echo 'export PATH=$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$PATH' >> ~/.bashrc
+source ~/.bashrc
+
+4)
+sdkmanager –version
+5)
+sdkmanager --install "platform-tools" "platforms;android-30" "build-tools;30.0.3"
+6)
+yes | sdkmanager –licenses
+
+Permissions
+chmod +x gradlew
+
+./gradlew clean
+./gradlew assembleDebug
+./gradlew build
