@@ -1,25 +1,54 @@
-java should be installed
-sudo apt update
-sudo apt install openjdk-17-jdk -y
-java -version
-
-Step 2: Download & Install OWASP ZAP
-wget https://github.com/zaproxy/zaproxy/releases/latest/download/ZAP_2_13_0_Linux.tar.gz
-tar -xvzf ZAP_2_13_0_Linux.tar.gz
-sudo mv ZAP_2_13_0 /opt/owasp-zap
-
- Step 3: Run OWASP ZAP UI
-If you have a GUI installed (X11/VNC)
-
-ssh -X user@server-ip
-cd /opt/owasp-zap
-./zap.sh
-
-cd /opt/owasp-zap
-./zap.sh -daemon -host 0.0.0.0 -port 8081
-
-http://<server-ip>:8081
-
-
-Automate OWASP ZAP in Jenkins 
-zap-cli quick-scan --self-contained --start-options "-config api.disablekey=true" http://your-app-url
+install java 17 or ,,
+ 
+wget https://github.com/zaproxy/zaproxy/releases/download/v2.16.1/ZAP_2.16.1_Linux.tar.gz
+ 
+tar -xvzf ZAP_2.16.1_Linux.tar.gz
+ 
+sudo mv ZAP_2.16.1 /opt/zap
+ 
+sudo chmod +x /opt/zap/zap.sh
+ 
+echo 'export PATH=$PATH:/opt/zap' >> ~/.bashrc
+source ~/.bashrc
+ 
+/opt/zap/zap.sh -version
+ 
+ 
+/opt/zap/zap.sh -daemon -port 8090 -host 0.0.0.0 -config api.disablekey=true &
+sleep 15
+curl "http://localhost:8090/JSON/ascan/action/scan/?url=http://your-app-url"
+sleep 60
+curl "http://localhost:8090/OTHER/core/other/htmlreport/" -o zap_report.html
+ 
+ 
+# Start ZAP in daemon mode
+nohup /opt/zap/zap.sh -daemon -port 8090 -host 0.0.0.0 -config api.disablekey=true &
+ 
+# Wait for ZAP to start
+echo "Waiting for ZAP to start..."
+for i in {1..30}; do
+  if curl -s http://localhost:8090; then
+    echo "ZAP is ready!"
+    break
+  fi
+  sleep 2
+done
+ 
+TARGET_URL="http://localhost:3000"  # Replace with your real target
+ 
+# Step 1: Spider the site to discover all pages
+echo "Starting spider..."
+curl "http://localhost:8090/JSON/spider/action/scan/?url=$TARGET_URL"
+ 
+# Optional: wait for spider to complete (simplified sleep here)
+sleep 20
+ 
+# Step 2: Trigger active scan
+echo "Starting active scan..."
+curl "http://localhost:8090/JSON/ascan/action/scan/?url=$TARGET_URL"
+ 
+# Wait for scan to complete
+sleep 60
+ 
+# Step 3: Download the scan report
+curl "http://localhost:8090/OTHER/core/other/htmlreport/" -o zap_report.html
