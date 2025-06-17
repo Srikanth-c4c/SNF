@@ -28,11 +28,11 @@ echo 'export PATH=$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-
 source ~/.bashrc
 
 4)
-sdkmanager –version
+sdkmanager –-version
 5)
 sdkmanager --install "platform-tools" "platforms;android-30" "build-tools;30.0.3"
 6)
-yes | sdkmanager –licenses
+yes | sdkmanager –-licenses
 
 Permissions
 chmod +x gradlew
